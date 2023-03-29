@@ -1,5 +1,7 @@
 import { linearQF } from "../index.js";
 
+// Tests taken from
+// https://github.com/gitcoinco/grants-stack/blob/main/packages/api/docs/linearQF.md#qf-calculation-example
 const votes = [
   {
     voter: "sender_1",
@@ -57,7 +59,6 @@ const votes = [
     projectId: "project_2",
     amountUSD: 4,
   },
-
 
   {
     voter: "sender_1",
