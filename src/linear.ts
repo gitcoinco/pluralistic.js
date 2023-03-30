@@ -1,13 +1,13 @@
-export interface Donation {
-  voter: string;
-  projectId: string;
-  amountUSD: number;
+export interface Contribution {
+  contributor: string;
+  recipient: string;
+  amount: number;
 }
 
-type AggregatedDonations = {
-  [projectId: string]: {
+type AggregatedContributions = {
+  [recipient: string]: {
     totalReceived: number;
-    donations: { [voter: string]: number };
+    contributions: { [contributor: string]: number };
   };
 };
 
@@ -19,8 +19,8 @@ export type Calculation = {
   matched: number;
 };
 
-export type ProjectsCalculations = {
-  [projectId: string]: Calculation;
+export type RecipientsCalculations = {
+  [recipient: string]: Calculation;
 };
 
 const defaultLinearQFOptions = (): LinearQFOptions => ({});
@@ -31,61 +31,63 @@ const newCalculation = (totalReceived: number): Calculation => ({
   matched: 0,
 });
 
-export const aggregateDonations = (
-  donations: Donation[]
-): AggregatedDonations => {
-  const ag: AggregatedDonations = {};
+export const aggregateContributions = (
+  contributions: Contribution[]
+): AggregatedContributions => {
+  const ag: AggregatedContributions = {};
 
-  for (const donation of donations) {
-    ag[donation.projectId] ||= {
+  for (const contribution of contributions) {
+    ag[contribution.recipient] ||= {
       totalReceived: 0,
-      donations: {},
+      contributions: {},
     };
 
-    ag[donation.projectId].totalReceived += donation.amountUSD;
-    ag[donation.projectId].donations[donation.voter] ||= 0;
-    ag[donation.projectId].donations[donation.voter] += donation.amountUSD;
+    ag[contribution.recipient].totalReceived += contribution.amount;
+    ag[contribution.recipient].contributions[contribution.contributor] ||= 0;
+    ag[contribution.recipient].contributions[contribution.contributor] +=
+      contribution.amount;
   }
 
   return ag;
 };
 
 export const linearQF = (
-  rawDonations: Donation[],
+  rawContributions: Contribution[],
   matchAmount: number,
   options: LinearQFOptions = defaultLinearQFOptions()
 ) => {
-  const aggregated: AggregatedDonations = aggregateDonations(rawDonations);
-  const calculations: ProjectsCalculations = {};
+  const aggregated: AggregatedContributions =
+    aggregateContributions(rawContributions);
+  const calculations: RecipientsCalculations = {};
 
   let totSqrtSum = 0;
 
-  // for each project
-  for (const projectId in aggregated) {
-    let totProjectSqrtSum = 0;
-    // for each project donation aggregated by voter
-    for (const voter in aggregated[projectId].donations) {
-      const amount = aggregated[projectId].donations[voter];
+  // for each recipient
+  for (const recipient in aggregated) {
+    let totRecipientSqrtSum = 0;
+    // for each recipient contribution aggregated by contributor
+    for (const contributor in aggregated[recipient].contributions) {
+      const amount = aggregated[recipient].contributions[contributor];
       const sqrt = Math.sqrt(amount);
 
-      calculations[projectId] ||= newCalculation(
-        aggregated[projectId].totalReceived
+      calculations[recipient] ||= newCalculation(
+        aggregated[recipient].totalReceived
       );
-      calculations[projectId].sumOfSqrt += sqrt;
+      calculations[recipient].sumOfSqrt += sqrt;
 
-      totProjectSqrtSum += sqrt;
+      totRecipientSqrtSum += sqrt;
     }
 
     totSqrtSum +=
-      Math.pow(totProjectSqrtSum, 2) - calculations[projectId].totalReceived;
+      Math.pow(totRecipientSqrtSum, 2) - calculations[recipient].totalReceived;
   }
 
-  // for each project
-  for (const projectId in aggregated) {
+  // for each recipient
+  for (const recipient in aggregated) {
     const val =
-      Math.pow(calculations[projectId].sumOfSqrt, 2) -
-      calculations[projectId].totalReceived;
-    calculations[projectId].matched = (val * matchAmount) / totSqrtSum;
+      Math.pow(calculations[recipient].sumOfSqrt, 2) -
+      calculations[recipient].totalReceived;
+    calculations[recipient].matched = (val * matchAmount) / totSqrtSum;
   }
 
   return calculations;

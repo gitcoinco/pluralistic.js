@@ -2,98 +2,98 @@ import { linearQF } from "../index.js";
 
 // Tests taken from
 // https://github.com/gitcoinco/grants-stack/blob/main/packages/api/docs/linearQF.md#qf-calculation-example
-const votes = [
+const contributions = [
   {
-    voter: "sender_1",
-    projectId: "project_1",
-    amountUSD: 1,
+    contributor: "sender_1",
+    recipient: "project_1",
+    amount: 1,
   },
   {
-    voter: "sender_2",
-    projectId: "project_1",
-    amountUSD: 4,
+    contributor: "sender_2",
+    recipient: "project_1",
+    amount: 4,
   },
   {
-    voter: "sender_3",
-    projectId: "project_1",
-    amountUSD: 1,
+    contributor: "sender_3",
+    recipient: "project_1",
+    amount: 1,
   },
   {
-    voter: "sender_4",
-    projectId: "project_1",
-    amountUSD: 9,
-  },
-
-  {
-    voter: "sender_1",
-    projectId: "project_2",
-    amountUSD: 1,
-  },
-  {
-    voter: "sender_2",
-    projectId: "project_2",
-    amountUSD: 1,
-  },
-  {
-    voter: "sender_3",
-    projectId: "project_2",
-    amountUSD: 1,
-  },
-  {
-    voter: "sender_4",
-    projectId: "project_2",
-    amountUSD: 1,
-  },
-  {
-    voter: "sender_5",
-    projectId: "project_2",
-    amountUSD: 1,
-  },
-  {
-    voter: "sender_6",
-    projectId: "project_2",
-    amountUSD: 1,
-  },
-  {
-    voter: "sender_7",
-    projectId: "project_2",
-    amountUSD: 4,
+    contributor: "sender_4",
+    recipient: "project_1",
+    amount: 9,
   },
 
   {
-    voter: "sender_1",
-    projectId: "project_3",
-    amountUSD: 1,
+    contributor: "sender_1",
+    recipient: "project_2",
+    amount: 1,
   },
   {
-    voter: "sender_2",
-    projectId: "project_3",
-    amountUSD: 9,
+    contributor: "sender_2",
+    recipient: "project_2",
+    amount: 1,
   },
   {
-    voter: "sender_3",
-    projectId: "project_3",
-    amountUSD: 1,
+    contributor: "sender_3",
+    recipient: "project_2",
+    amount: 1,
   },
   {
-    voter: "sender_4",
-    projectId: "project_3",
-    amountUSD: 9,
+    contributor: "sender_4",
+    recipient: "project_2",
+    amount: 1,
   },
   {
-    voter: "sender_5",
-    projectId: "project_3",
-    amountUSD: 1,
+    contributor: "sender_5",
+    recipient: "project_2",
+    amount: 1,
   },
   {
-    voter: "sender_6",
-    projectId: "project_3",
-    amountUSD: 9,
+    contributor: "sender_6",
+    recipient: "project_2",
+    amount: 1,
   },
   {
-    voter: "sender_7",
-    projectId: "project_3",
-    amountUSD: 4,
+    contributor: "sender_7",
+    recipient: "project_2",
+    amount: 4,
+  },
+
+  {
+    contributor: "sender_1",
+    recipient: "project_3",
+    amount: 1,
+  },
+  {
+    contributor: "sender_2",
+    recipient: "project_3",
+    amount: 9,
+  },
+  {
+    contributor: "sender_3",
+    recipient: "project_3",
+    amount: 1,
+  },
+  {
+    contributor: "sender_4",
+    recipient: "project_3",
+    amount: 9,
+  },
+  {
+    contributor: "sender_5",
+    recipient: "project_3",
+    amount: 1,
+  },
+  {
+    contributor: "sender_6",
+    recipient: "project_3",
+    amount: 9,
+  },
+  {
+    contributor: "sender_7",
+    recipient: "project_3",
+    amount: 4,
   },
 ];
 
@@ -101,7 +101,7 @@ describe("linearQF", () => {
   describe("simple calculation", () => {
     test("calculates the matches", async () => {
       const matchAmount = 100;
-      const res = linearQF(votes, matchAmount);
+      const res = linearQF(contributions, matchAmount);
 
       expect(Object.keys(res).length).toEqual(3);
 
