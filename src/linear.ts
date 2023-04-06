@@ -11,7 +11,9 @@ type AggregatedContributions = {
   };
 };
 
-export type LinearQFOptions = {};
+export type LinearQFOptions = {
+  minimumAmount: number;
+};
 
 export type Calculation = {
   totalReceived: number;
@@ -23,7 +25,9 @@ export type RecipientsCalculations = {
   [recipient: string]: Calculation;
 };
 
-const defaultLinearQFOptions = (): LinearQFOptions => ({});
+const defaultLinearQFOptions = (): LinearQFOptions => ({
+  minimumAmount: 0,
+});
 
 const newCalculation = (totalReceived: number): Calculation => ({
   totalReceived,
@@ -32,11 +36,16 @@ const newCalculation = (totalReceived: number): Calculation => ({
 });
 
 export const aggregateContributions = (
-  contributions: Contribution[]
+  contributions: Contribution[],
+  options: LinearQFOptions
 ): AggregatedContributions => {
   const ag: AggregatedContributions = {};
 
   for (const contribution of contributions) {
+    if (contribution.amount <= options.minimumAmount) {
+      continue;
+    }
+
     ag[contribution.recipient] ||= {
       totalReceived: 0,
       contributions: {},
@@ -56,8 +65,10 @@ export const linearQF = (
   matchAmount: number,
   options: LinearQFOptions = defaultLinearQFOptions()
 ) => {
-  const aggregated: AggregatedContributions =
-    aggregateContributions(rawContributions);
+  const aggregated: AggregatedContributions = aggregateContributions(
+    rawContributions,
+    options
+  );
   const calculations: RecipientsCalculations = {};
 
   let totSqrtSum = 0;

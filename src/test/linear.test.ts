@@ -123,5 +123,29 @@ describe("linearQF", () => {
         matched: 64.8,
       });
     });
+
+    test("calculates the matches skipping donations under threshold", async () => {
+      const matchAmount = 100;
+      const contributionsWithLowAmounts = [
+        ...contributions,
+        {
+          contributor: "sender_1",
+          recipient: "project_4",
+          amount: 0.1,
+        },
+        {
+          contributor: "sender_2",
+          recipient: "project_4",
+          amount: 0.5,
+        },
+      ];
+
+      const res = linearQF(contributionsWithLowAmounts, matchAmount, {
+        minimumAmount: 1,
+      });
+
+      expect(Object.keys(res).length).toEqual(3);
+      expect(res["project_4"]).toEqual(undefined);
+    });
   });
 });
