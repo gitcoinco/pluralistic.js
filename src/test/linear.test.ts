@@ -139,6 +139,7 @@ describe("linearQF", () => {
           amount: 0.5,
         },
       ];
+
       const res = linearQF(contributionsWithLowAmounts, matchAmount, {
         minimumAmount: 1,
       });
