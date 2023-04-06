@@ -39,10 +39,6 @@ benchmark(
   }
 );
 
-// let results: any;
-
 benchmark("match calculation", () => {
   linearQF(contributions, 333000);
 });
-
-// console.log(results);
