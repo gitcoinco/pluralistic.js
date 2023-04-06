@@ -4,15 +4,21 @@ export interface Contribution {
   amount: number;
 }
 
+type AggregatedContribution = {
+  totalReceived: number;
+  contributions: { [contributor: string]: number };
+};
+
 type AggregatedContributions = {
-  [recipient: string]: {
-    totalReceived: number;
-    contributions: { [contributor: string]: number };
+  totalReceived: number;
+  list: {
+    [recipient: string]: AggregatedContribution;
   };
 };
 
 export type LinearQFOptions = {
   minimumAmount: number;
+  ignoreSaturation: boolean;
 };
 
 export type Calculation = {
@@ -27,6 +33,7 @@ export type RecipientsCalculations = {
 
 const defaultLinearQFOptions = (): LinearQFOptions => ({
   minimumAmount: 0,
+  ignoreSaturation: false,
 });
 
 const newCalculation = (totalReceived: number): Calculation => ({
@@ -39,21 +46,27 @@ export const aggregateContributions = (
   contributions: Contribution[],
   options: LinearQFOptions
 ): AggregatedContributions => {
-  const ag: AggregatedContributions = {};
+  const ag: AggregatedContributions = {
+    totalReceived: 0,
+    list: {},
+  };
 
   for (const contribution of contributions) {
     if (contribution.amount <= options.minimumAmount) {
       continue;
     }
 
-    ag[contribution.recipient] ||= {
+    ag.list[contribution.recipient] ||= {
       totalReceived: 0,
       contributions: {},
     };
 
-    ag[contribution.recipient].totalReceived += contribution.amount;
-    ag[contribution.recipient].contributions[contribution.contributor] ||= 0;
-    ag[contribution.recipient].contributions[contribution.contributor] +=
+    ag.totalReceived += contribution.amount;
+    ag.list[contribution.recipient].totalReceived += contribution.amount;
+    ag.list[contribution.recipient].contributions[
+      contribution.contributor
+    ] ||= 0;
+    ag.list[contribution.recipient].contributions[contribution.contributor] +=
       contribution.amount;
   }
 
@@ -74,18 +87,18 @@ export const linearQF = (
   let totSqrtSum = 0;
 
   // for each recipient
-  for (const recipient in aggregated) {
+  for (const recipient in aggregated.list) {
     let totRecipientSqrtSum = 0;
     // for each recipient contribution aggregated by contributor
-    for (const contributor in aggregated[recipient].contributions) {
-      const amount = aggregated[recipient].contributions[contributor];
+    for (const contributor in aggregated.list[recipient].contributions) {
+      const amount = aggregated.list[recipient].contributions[contributor];
       const sqrt = Math.sqrt(amount);
 
       calculations[recipient] ||= newCalculation(
-        aggregated[recipient].totalReceived
+        aggregated.list[recipient].totalReceived
       );
-      calculations[recipient].sumOfSqrt += sqrt;
 
+      calculations[recipient].sumOfSqrt += sqrt;
       totRecipientSqrtSum += sqrt;
     }
 
@@ -94,11 +107,22 @@ export const linearQF = (
   }
 
   // for each recipient
-  for (const recipient in aggregated) {
+  for (const recipient in aggregated.list) {
     const val =
       Math.pow(calculations[recipient].sumOfSqrt, 2) -
       calculations[recipient].totalReceived;
-    calculations[recipient].matched = (val * matchAmount) / totSqrtSum;
+
+    let matchRatio = 1;
+
+    if (
+      aggregated.totalReceived < matchAmount &&
+      options.ignoreSaturation === false
+    ) {
+      matchRatio = aggregated.totalReceived / matchAmount;
+    }
+
+    calculations[recipient].matched =
+      ((val * matchAmount) / totSqrtSum) * matchRatio;
   }
 
   return calculations;
