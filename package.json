@@ -9,7 +9,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "postinstall": "npm run build"
   },
   "author": "",
   "license": "ISC",
