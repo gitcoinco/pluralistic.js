@@ -135,7 +135,7 @@ export const linearQF = (
     }
 
     let match = ((val * matchAmount) / totSqrtSum) * matchRatio;
-    let matchWithoutCap = match;
+    const matchWithoutCap = match;
     let capOverflow = 0;
 
     if (options.matchingCapAmount !== undefined) {
