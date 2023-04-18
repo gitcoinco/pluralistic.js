@@ -90,13 +90,13 @@ export const linearQF = (
   );
   const calculations: RecipientsCalculations = {};
 
-  let totSqrtSum = 0;
+  let totalSqrtSum = 0;
 
   // for each recipient in aggregated.list we calculate the sum
   // of sqrt in the calculations object,
-  // and we sum all the sqrt in totSqrtSum
+  // and we sum all the sqrt in totalSqrtSum
   for (const recipient in aggregated.list) {
-    let totRecipientSqrtSum = 0;
+    let totalRecipientSqrtSum = 0;
     // for each recipient contribution aggregated by contributor
     for (const contributor in aggregated.list[recipient].contributions) {
       const amount = aggregated.list[recipient].contributions[contributor];
@@ -107,19 +107,21 @@ export const linearQF = (
       );
 
       calculations[recipient].sumOfSqrt += sqrt;
-      totRecipientSqrtSum += sqrt;
+      totalRecipientSqrtSum += sqrt;
     }
 
-    totSqrtSum +=
-      Math.pow(totRecipientSqrtSum, 2) - calculations[recipient].totalReceived;
+    totalSqrtSum +=
+      Math.pow(totalRecipientSqrtSum, 2) -
+      calculations[recipient].totalReceived;
   }
 
   let totalCapOverflow = 0;
   let totalUnderCap = 0;
+  let totalMatchedFromUncapped = 0;
 
   // for each recipient in calculations
   // we calculate the final match based on
-  // its sqrt and the totSqrtSum
+  // its sqrt and the totalSqrtSum
   for (const recipient in calculations) {
     const val =
       Math.pow(calculations[recipient].sumOfSqrt, 2) -
@@ -134,7 +136,7 @@ export const linearQF = (
       matchRatio = aggregated.totalReceived / matchAmount;
     }
 
-    let match = ((val * matchAmount) / totSqrtSum) * matchRatio;
+    let match = ((val * matchAmount) / totalSqrtSum) * matchRatio;
     const matchWithoutCap = match;
     let capOverflow = 0;
 
@@ -145,7 +147,8 @@ export const linearQF = (
       if (capOverflow > 0) {
         match = options.matchingCapAmount;
       } else {
-        totalUnderCap -= capOverflow;
+        totalUnderCap = totalUnderCap - capOverflow;
+        totalMatchedFromUncapped += match;
       }
     }
 
@@ -165,8 +168,10 @@ export const linearQF = (
       if (recipientOverflow < 0) {
         // recipientOverflow is negative so we can distribute something
         // to the current recipient
-        const maxAmountToCap = -recipientOverflow;
-        const newMatch = (maxAmountToCap * totalUnderCap) / totalUnderCap;
+        const additionalMatch =
+          (calculations[recipient].matched * totalCapOverflow) /
+          totalMatchedFromUncapped;
+        const newMatch = calculations[recipient].matched + additionalMatch;
         calculations[recipient].matched = newMatch;
       }
     }

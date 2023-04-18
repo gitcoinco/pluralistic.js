@@ -257,12 +257,15 @@ describe("linearQF", () => {
 
       expect(Object.keys(res).length).toEqual(3);
 
+      // results taken from https://github.com/gitcoinco/grants-stack/blob/main/packages/api/docs/linearQF.md#if-match-cap-is-05
       expect(res["project_1"]).toEqual({
         capOverflow: -36.4,
         sumOfSqrt: 7,
         totalReceived: 15,
         matchedWithoutCap: 13.6,
-        matched: 36.4,
+        // matched: 19.3,
+        // we will change this test in the next PRs using BigInt and cents or token decimals
+        matched: 19.318181818181817,
       });
 
       expect(res["project_2"]).toEqual({
@@ -270,7 +273,9 @@ describe("linearQF", () => {
         sumOfSqrt: 8,
         totalReceived: 10,
         matchedWithoutCap: 21.6,
-        matched: 28.4,
+        // matched: 30.7,
+        // we will change this test in the next PRs using BigInt and cents or token decimals
+        matched: 30.68181818181818,
       });
 
       expect(res["project_3"]).toEqual({
@@ -281,6 +286,13 @@ describe("linearQF", () => {
         matchedWithoutCap: 64.8,
         matched: 50,
       });
+
+      let totalDistributed = 0;
+      for (const recipient in res) {
+        totalDistributed += res[recipient].matched;
+      }
+
+      expect(totalDistributed).toEqual(100);
     });
   });
 });
