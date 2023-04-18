@@ -1,6 +1,12 @@
 import fs from "fs";
 import { linearQF, Contribution } from "../index.js";
 
+interface RawContribution {
+  voter: string;
+  projectId: string;
+  amountUSD: number;
+}
+
 function benchmark(name: string, callback: () => void) {
   const start = new Date().getTime();
   callback();
@@ -21,7 +27,7 @@ const data = fs.readFileSync(filePath, {
   flag: "r",
 });
 
-let rawContributions: any;
+let rawContributions: RawContribution[] = [];
 let contributions: Contribution[];
 
 benchmark("loading raw donations", () => {
@@ -31,10 +37,10 @@ benchmark("loading raw donations", () => {
 benchmark(
   `convert ${rawContributions.length} raw contributions to contributions`,
   () => {
-    contributions = rawContributions.map((raw: any) => ({
+    contributions = rawContributions.map((raw: RawContribution) => ({
       contributor: raw.voter,
       recipient: raw.projectId,
-      amount: raw.amount,
+      amount: raw.amountUSD,
     }));
   }
 );
