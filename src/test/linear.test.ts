@@ -6,101 +6,101 @@ const contributions = [
   {
     contributor: "sender_1",
     recipient: "project_1",
-    amount: 1,
+    amount: 100,
   },
   {
     contributor: "sender_2",
     recipient: "project_1",
-    amount: 4,
+    amount: 400,
   },
   {
     contributor: "sender_3",
     recipient: "project_1",
-    amount: 1,
+    amount: 100,
   },
   {
     contributor: "sender_4",
     recipient: "project_1",
-    amount: 9,
+    amount: 900,
   },
 
   {
     contributor: "sender_1",
     recipient: "project_2",
-    amount: 1,
+    amount: 100,
   },
   {
     contributor: "sender_2",
     recipient: "project_2",
-    amount: 1,
+    amount: 100,
   },
   {
     contributor: "sender_3",
     recipient: "project_2",
-    amount: 1,
+    amount: 100,
   },
   {
     contributor: "sender_4",
     recipient: "project_2",
-    amount: 1,
+    amount: 100,
   },
   {
     contributor: "sender_5",
     recipient: "project_2",
-    amount: 1,
+    amount: 100,
   },
   {
     contributor: "sender_6",
     recipient: "project_2",
-    amount: 1,
+    amount: 100,
   },
   {
     contributor: "sender_7",
     recipient: "project_2",
-    amount: 4,
+    amount: 400,
   },
 
   {
     contributor: "sender_1",
     recipient: "project_3",
-    amount: 1,
+    amount: 100,
   },
   {
     contributor: "sender_2",
     recipient: "project_3",
-    amount: 9,
+    amount: 900,
   },
   {
     contributor: "sender_3",
     recipient: "project_3",
-    amount: 1,
+    amount: 100,
   },
   {
     contributor: "sender_4",
     recipient: "project_3",
-    amount: 9,
+    amount: 900,
   },
   {
     contributor: "sender_5",
     recipient: "project_3",
-    amount: 1,
+    amount: 100,
   },
   {
     contributor: "sender_6",
     recipient: "project_3",
-    amount: 9,
+    amount: 900,
   },
   {
     contributor: "sender_7",
     recipient: "project_3",
-    amount: 4,
+    amount: 400,
   },
 ];
 
 describe("linearQF", () => {
   describe("simple calculation", () => {
     test("calculates the matches", async () => {
-      const matchAmount = 100;
+      const matchAmount = 100_00;
       const res = linearQF(contributions, matchAmount, {
         minimumAmount: 0,
         ignoreSaturation: true,
@@ -111,47 +111,47 @@ describe("linearQF", () => {
 
       expect(res["project_1"]).toEqual({
         capOverflow: 0,
-        sumOfSqrt: 7,
-        totalReceived: 15,
-        matchedWithoutCap: 13.6,
-        matched: 13.6,
+        sumOfSqrt: 70,
+        totalReceived: 1500,
+        matchedWithoutCap: 1360,
+        matched: 1360,
       });
 
       expect(res["project_2"]).toEqual({
         capOverflow: 0,
-        sumOfSqrt: 8,
-        totalReceived: 10,
-        matchedWithoutCap: 21.6,
-        matched: 21.6,
+        sumOfSqrt: 80,
+        totalReceived: 1000,
+        matchedWithoutCap: 2160,
+        matched: 2160,
       });
 
       expect(res["project_3"]).toEqual({
         capOverflow: 0,
-        sumOfSqrt: 14,
-        totalReceived: 34,
-        matchedWithoutCap: 64.8,
-        matched: 64.8,
+        sumOfSqrt: 140,
+        totalReceived: 3400,
+        matchedWithoutCap: 6480,
+        matched: 6480,
       });
     });
 
     test("calculates the matches skipping donations under threshold", async () => {
-      const matchAmount = 100;
+      const matchAmount = 100_00;
       const contributionsWithLowAmounts = [
         ...contributions,
         {
           contributor: "sender_1",
           recipient: "project_4",
-          amount: 0.1,
+          amount: 10,
         },
         {
           contributor: "sender_2",
           recipient: "project_4",
-          amount: 0.5,
+          amount: 50,
         },
       ];
 
       const res = linearQF(contributionsWithLowAmounts, matchAmount, {
-        minimumAmount: 1,
+        minimumAmount: 100,
         ignoreSaturation: true,
         matchingCapAmount: undefined,
       });
@@ -161,69 +161,69 @@ describe("linearQF", () => {
     });
 
     test("calculates the matches with total donations greater than matching amount", async () => {
-      const matchAmount = 10;
+      const matchAmount = 10_00;
       const res = linearQF(contributions, matchAmount);
 
       expect(Object.keys(res).length).toEqual(3);
 
       expect(res["project_1"]).toEqual({
         capOverflow: 0,
-        sumOfSqrt: 7,
-        totalReceived: 15,
-        matchedWithoutCap: 1.36,
-        matched: 1.36,
+        sumOfSqrt: 70,
+        totalReceived: 1500,
+        matchedWithoutCap: 136,
+        matched: 136,
       });
 
       expect(res["project_2"]).toEqual({
         capOverflow: 0,
-        sumOfSqrt: 8,
-        totalReceived: 10,
-        matchedWithoutCap: 2.16,
-        matched: 2.16,
+        sumOfSqrt: 80,
+        totalReceived: 1000,
+        matchedWithoutCap: 216,
+        matched: 216,
       });
 
       expect(res["project_3"]).toEqual({
         capOverflow: 0,
-        sumOfSqrt: 14,
-        totalReceived: 34,
-        matchedWithoutCap: 6.48,
-        matched: 6.48,
+        sumOfSqrt: 140,
+        totalReceived: 3400,
+        matchedWithoutCap: 648,
+        matched: 648,
       });
     });
 
     test("calculates the matches with total donations less than matching amount", async () => {
-      const matchAmount = 100;
+      const matchAmount = 100_00;
       const contributions = [
         {
           contributor: "sender_1",
           recipient: "project_1",
-          amount: 5,
+          amount: 500,
         },
         {
           contributor: "sender_2",
           recipient: "project_1",
-          amount: 5,
+          amount: 500,
         },
         {
           contributor: "sender_3",
           recipient: "project_1",
-          amount: 5,
+          amount: 500,
         },
         {
           contributor: "sender_4",
           recipient: "project_1",
-          amount: 5,
+          amount: 500,
         },
 
         {
           contributor: "sender_3",
           recipient: "project_2",
-          amount: 20,
+          amount: 2000,
         },
         {
           contributor: "sender_4",
           recipient: "project_2",
-          amount: 20,
+          amount: 2000,
         },
       ];
       const res = linearQF(contributions, matchAmount);
@@ -232,59 +232,59 @@ describe("linearQF", () => {
 
       expect(res["project_1"]).toEqual({
         capOverflow: 0,
-        sumOfSqrt: 8.94427190999916,
-        totalReceived: 20,
-        matchedWithoutCap: 36,
-        matched: 36,
+        sumOfSqrt: 89.44271909999159,
+        totalReceived: 2000,
+        matchedWithoutCap: 3600,
+        matched: 3600,
       });
 
       expect(res["project_2"]).toEqual({
         capOverflow: 0,
-        sumOfSqrt: 8.94427190999916,
-        totalReceived: 40,
-        matchedWithoutCap: 24,
-        matched: 24,
+        sumOfSqrt: 89.44271909999159,
+        totalReceived: 4000,
+        matchedWithoutCap: 2400,
+        matched: 2400,
       });
     });
 
     test("calculates the matches with matching cap", async () => {
-      const matchAmount = 100;
+      const matchAmount = 100_00;
       const res = linearQF(contributions, matchAmount, {
         minimumAmount: 0,
         ignoreSaturation: true,
-        matchingCapAmount: 50,
+        matchingCapAmount: 5000,
       });
 
       expect(Object.keys(res).length).toEqual(3);
 
       // results taken from https://github.com/gitcoinco/grants-stack/blob/main/packages/api/docs/linearQF.md#if-match-cap-is-05
       expect(res["project_1"]).toEqual({
-        capOverflow: -36.4,
-        sumOfSqrt: 7,
-        totalReceived: 15,
-        matchedWithoutCap: 13.6,
+        capOverflow: -3640,
+        sumOfSqrt: 70,
+        totalReceived: 1500,
+        matchedWithoutCap: 1360,
         // matched: 19.3,
         // we will change this test in the next PRs using BigInt and cents or token decimals
-        matched: 19.318181818181817,
+        matched: 1931.818181818182,
       });
 
       expect(res["project_2"]).toEqual({
-        capOverflow: -28.4,
-        sumOfSqrt: 8,
-        totalReceived: 10,
-        matchedWithoutCap: 21.6,
+        capOverflow: -2840,
+        sumOfSqrt: 80,
+        totalReceived: 1000,
+        matchedWithoutCap: 2160,
         // matched: 30.7,
         // we will change this test in the next PRs using BigInt and cents or token decimals
-        matched: 30.68181818181818,
+        matched: 3068.181818181818,
       });
 
       expect(res["project_3"]).toEqual({
         // we will change this test in the next PRs using BigInt and cents or token decimals
-        capOverflow: 14.799999999999997,
-        sumOfSqrt: 14,
-        totalReceived: 34,
-        matchedWithoutCap: 64.8,
-        matched: 50,
+        capOverflow: 1480,
+        sumOfSqrt: 140,
+        totalReceived: 3400,
+        matchedWithoutCap: 6480,
+        matched: 5000,
       });
 
       let totalDistributed = 0;
@@ -292,7 +292,7 @@ describe("linearQF", () => {
         totalDistributed += res[recipient].matched;
       }
 
-      expect(totalDistributed).toEqual(100);
+      expect(totalDistributed).toEqual(100_00);
     });
   });
 });
