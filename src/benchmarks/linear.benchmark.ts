@@ -40,11 +40,11 @@ benchmark(
     contributions = rawContributions.map((raw: RawContribution) => ({
       contributor: raw.voter,
       recipient: raw.projectId,
-      amount: raw.amountUSD,
+      amount: BigInt(raw.amountUSD),
     }));
   }
 );
 
 benchmark("match calculation", () => {
-  linearQF(contributions, 333000);
+  linearQF(contributions, BigInt(333_000));
 });
