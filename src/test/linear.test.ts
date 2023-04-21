@@ -104,7 +104,7 @@ const DECIMALS_PRECISION = 6n;
 const testDistributedAmount = (
   rc: RecipientsCalculations,
   expectedAmount: bigint,
-  maxDifference: bigint = 0n
+  maxDifference = 0n
 ) => {
   let totalDistributed = 0n;
 

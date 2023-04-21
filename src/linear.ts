@@ -16,27 +16,22 @@ type AggregatedContributions = {
   };
 };
 
-// BigInt literals (0n) are not available when targeting lower than ES2020
-const zero = BigInt(0);
-const one = BigInt(1);
-const two = BigInt(2);
-
 const BigIntMath = {
   sqrt: (n: bigint) => {
-    if (n < zero) {
+    if (n < 0n) {
       throw new Error("Square root of negative numbers is not supported.");
     }
 
-    if (n === zero || n === one) {
+    if (n === 0n || n === 1n) {
       return n;
     }
 
     let x = n;
-    let y = (x + one) >> one;
+    let y = (x + 1n) >> 1n;
 
     while (y < x) {
       x = y;
-      y = (x + n / x) >> one;
+      y = (x + n / x) >> 1n;
     }
 
     return x;
@@ -64,17 +59,17 @@ export type RecipientsCalculations = {
 };
 
 const defaultLinearQFOptions = (): LinearQFOptions => ({
-  minimumAmount: zero,
+  minimumAmount: 0n,
   ignoreSaturation: false,
   matchingCapAmount: undefined,
 });
 
 const newCalculation = (totalReceived: bigint): Calculation => ({
   totalReceived,
-  sumOfSqrt: zero,
-  capOverflow: zero,
-  matchedWithoutCap: zero,
-  matched: zero,
+  sumOfSqrt: 0n,
+  capOverflow: 0n,
+  matchedWithoutCap: 0n,
+  matched: 0n,
 });
 
 export const aggregateContributions = (
@@ -82,7 +77,7 @@ export const aggregateContributions = (
   options: LinearQFOptions
 ): AggregatedContributions => {
   const ag: AggregatedContributions = {
-    totalReceived: zero,
+    totalReceived: 0n,
     list: {},
   };
 
@@ -92,14 +87,14 @@ export const aggregateContributions = (
     }
 
     ag.list[contribution.recipient] ||= {
-      totalReceived: zero,
+      totalReceived: 0n,
       contributions: {},
     };
 
     ag.totalReceived += contribution.amount;
     ag.list[contribution.recipient].totalReceived += contribution.amount;
     ag.list[contribution.recipient].contributions[contribution.contributor] ||=
-      zero;
+      0n;
     ag.list[contribution.recipient].contributions[contribution.contributor] +=
       contribution.amount;
   }
@@ -119,13 +114,13 @@ export const linearQF = (
   );
   const calculations: RecipientsCalculations = {};
 
-  let totalSqrtSum = zero;
+  let totalSqrtSum = 0n;
 
   // for each recipient in aggregated.list we calculate the sum
   // of sqrt in the calculations object,
   // and we sum all the sqrt in totalSqrtSum
   for (const recipient in aggregated.list) {
-    let totalRecipientSqrtSum = zero;
+    let totalRecipientSqrtSum = 0n;
     // for each recipient contribution aggregated by contributor
     for (const contributor in aggregated.list[recipient].contributions) {
       const amount = aggregated.list[recipient].contributions[contributor];
@@ -140,24 +135,24 @@ export const linearQF = (
     }
 
     totalSqrtSum +=
-      BigIntMath.pow(totalRecipientSqrtSum, two) -
+      BigIntMath.pow(totalRecipientSqrtSum, 2n) -
       calculations[recipient].totalReceived;
   }
 
-  let totalCapOverflow = zero;
-  let totalUnderCap = zero;
-  let totalMatchedFromUncapped = zero;
+  let totalCapOverflow = 0n;
+  let totalUnderCap = 0n;
+  let totalMatchedFromUncapped = 0n;
 
   // for each recipient in calculations
   // we calculate the final match based on
   // its sqrt and the totalSqrtSum
   for (const recipient in calculations) {
     const val =
-      BigIntMath.pow(calculations[recipient].sumOfSqrt, two) -
+      BigIntMath.pow(calculations[recipient].sumOfSqrt, 2n) -
       calculations[recipient].totalReceived;
 
-    const scalingFactor = BigInt(10) ** decimalsPrecision;
-    let matchRatio = one * scalingFactor;
+    const scalingFactor = 10n ** decimalsPrecision;
+    let matchRatio = 1n * scalingFactor;
 
     if (
       aggregated.totalReceived < matchAmount &&
@@ -169,13 +164,13 @@ export const linearQF = (
     let match =
       (((val * matchAmount) / totalSqrtSum) * matchRatio) / scalingFactor;
     const matchWithoutCap = match;
-    let capOverflow = zero;
+    let capOverflow = 0n;
 
     if (options.matchingCapAmount !== undefined) {
       // negative if lower than the cap
       capOverflow = match - options.matchingCapAmount;
 
-      if (capOverflow > zero) {
+      if (capOverflow > 0n) {
         match = options.matchingCapAmount;
       } else {
         totalUnderCap = totalUnderCap - capOverflow;
@@ -187,16 +182,16 @@ export const linearQF = (
     calculations[recipient].matched = match;
     calculations[recipient].capOverflow = capOverflow;
 
-    if (capOverflow > zero) {
+    if (capOverflow > 0n) {
       totalCapOverflow += capOverflow;
     }
   }
 
-  if (options.matchingCapAmount !== undefined && totalCapOverflow > zero) {
+  if (options.matchingCapAmount !== undefined && totalCapOverflow > 0n) {
     // redistribute the totalCapOverflow to all
     for (const recipient in calculations) {
       const recipientOverflow = calculations[recipient].capOverflow;
-      if (recipientOverflow < zero) {
+      if (recipientOverflow < 0n) {
         // recipientOverflow is negative so we can distribute something
         // to the current recipient
         const additionalMatch =
