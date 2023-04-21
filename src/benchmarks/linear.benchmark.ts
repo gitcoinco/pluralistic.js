@@ -4,7 +4,7 @@ import { linearQF, Contribution } from "../index.js";
 interface RawContribution {
   voter: string;
   projectId: string;
-  amountUSD: number;
+  amount: string;
 }
 
 function benchmark(name: string, callback: () => void) {
@@ -40,11 +40,11 @@ benchmark(
     contributions = rawContributions.map((raw: RawContribution) => ({
       contributor: raw.voter,
       recipient: raw.projectId,
-      amount: raw.amountUSD,
+      amount: BigInt(raw.amount),
     }));
   }
 );
 
 benchmark("match calculation", () => {
-  linearQF(contributions, 333000);
+  linearQF(contributions, 333_000n, 6n);
 });
