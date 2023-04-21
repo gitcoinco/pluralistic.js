@@ -4,7 +4,7 @@ import { linearQF, Contribution } from "../index.js";
 interface RawContribution {
   voter: string;
   projectId: string;
-  amount: number;
+  amount: string;
 }
 
 function benchmark(name: string, callback: () => void) {
