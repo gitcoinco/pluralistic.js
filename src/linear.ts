@@ -155,17 +155,18 @@ export const linearQF = (
       BigIntMath.pow(calculations[recipient].sumOfSqrt, two) -
       calculations[recipient].totalReceived;
 
-    const x = BigInt(100_000_000);
-    let matchRatio = one * x;
+    const scalingFactor = BigInt(100_000_000);
+    let matchRatio = one * scalingFactor;
 
     if (
       aggregated.totalReceived < matchAmount &&
       options.ignoreSaturation === false
     ) {
-      matchRatio = (aggregated.totalReceived * x) / matchAmount;
+      matchRatio = (aggregated.totalReceived * scalingFactor) / matchAmount;
     }
 
-    let match = (((val * matchAmount) / totalSqrtSum) * matchRatio) / x;
+    let match =
+      (((val * matchAmount) / totalSqrtSum) * matchRatio) / scalingFactor;
     const matchWithoutCap = match;
     let capOverflow = zero;
 
