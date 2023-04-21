@@ -110,6 +110,7 @@ export const aggregateContributions = (
 export const linearQF = (
   rawContributions: Contribution[],
   matchAmount: bigint,
+  decimalsPrecision: bigint,
   options: LinearQFOptions = defaultLinearQFOptions()
 ) => {
   const aggregated: AggregatedContributions = aggregateContributions(
@@ -155,7 +156,7 @@ export const linearQF = (
       BigIntMath.pow(calculations[recipient].sumOfSqrt, two) -
       calculations[recipient].totalReceived;
 
-    const scalingFactor = BigInt(100_000_000);
+    const scalingFactor = BigInt(10) ** decimalsPrecision;
     let matchRatio = one * scalingFactor;
 
     if (

@@ -102,6 +102,8 @@ const contributions = [
   },
 ];
 
+const DECIMALS_PRECISION = b(6);
+
 const testDistributedAmount = (
   rc: RecipientsCalculations,
   expectedAmount: bigint,
@@ -124,7 +126,7 @@ describe("linearQF", () => {
   describe("simple calculation", () => {
     test("calculates the matches", async () => {
       const matchAmount = b(100_000_000);
-      const res = linearQF(contributions, matchAmount, {
+      const res = linearQF(contributions, matchAmount, DECIMALS_PRECISION, {
         minimumAmount: b(0),
         ignoreSaturation: true,
         matchingCapAmount: undefined,
@@ -175,11 +177,16 @@ describe("linearQF", () => {
         },
       ];
 
-      const res = linearQF(contributionsWithLowAmounts, matchAmount, {
-        minimumAmount: b(1_000_000),
-        ignoreSaturation: true,
-        matchingCapAmount: undefined,
-      });
+      const res = linearQF(
+        contributionsWithLowAmounts,
+        matchAmount,
+        DECIMALS_PRECISION,
+        {
+          minimumAmount: b(1_000_000),
+          ignoreSaturation: true,
+          matchingCapAmount: undefined,
+        }
+      );
 
       expect(Object.keys(res).length).toEqual(3);
       expect(res["project_4"]).toEqual(undefined);
@@ -213,7 +220,7 @@ describe("linearQF", () => {
 
     test("calculates the matches with total donations greater than matching amount", async () => {
       const matchAmount = b(10_000_000);
-      const res = linearQF(contributions, matchAmount);
+      const res = linearQF(contributions, matchAmount, DECIMALS_PRECISION);
 
       expect(Object.keys(res).length).toEqual(3);
 
@@ -280,7 +287,7 @@ describe("linearQF", () => {
         },
       ];
 
-      const res = linearQF(contributions, matchAmount);
+      const res = linearQF(contributions, matchAmount, DECIMALS_PRECISION);
 
       expect(res["project_1"]).toEqual({
         capOverflow: b(0),
@@ -303,7 +310,7 @@ describe("linearQF", () => {
 
     test("calculates the matches with matching cap", async () => {
       const matchAmount = b(100_000_000);
-      const res = linearQF(contributions, matchAmount, {
+      const res = linearQF(contributions, matchAmount, DECIMALS_PRECISION, {
         minimumAmount: b(0),
         ignoreSaturation: true,
         matchingCapAmount: b(50_000_000),
