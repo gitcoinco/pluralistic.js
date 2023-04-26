@@ -17,6 +17,7 @@ type AggregatedContributions = {
 };
 
 const BigIntMath = {
+  // Babylonian method
   sqrt: (n: bigint) => {
     if (n < 0n) {
       throw new Error("Square root of negative numbers is not supported.");
@@ -26,7 +27,8 @@ const BigIntMath = {
       return n;
     }
 
-    let x = n;
+    // better initial guess with n / 2
+    let x = n >> 1n;
     let y = (x + 1n) >> 1n;
 
     while (y < x) {
