@@ -139,9 +139,11 @@ export const linearQF = (
       totalRecipientSqrtSum += sqrt;
     }
 
-    totalSqrtSum +=
-      BigIntMath.pow(totalRecipientSqrtSum, 2n) -
-      calculations[recipient].totalReceived;
+    if (calculations[recipient].contributionsCount > 1) {
+      totalSqrtSum +=
+        BigIntMath.pow(totalRecipientSqrtSum, 2n) -
+        calculations[recipient].totalReceived;
+    }
   }
 
   let totalCapOverflow = 0n;
