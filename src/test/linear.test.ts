@@ -132,6 +132,7 @@ describe("linearQF", () => {
       expect(Object.keys(res).length).toEqual(3);
 
       expect(res["project_1"]).toEqual({
+        contributionsCount: 4n,
         capOverflow: 0n,
         sumOfSqrt: 7_000n,
         totalReceived: 15_000_000n,
@@ -140,6 +141,7 @@ describe("linearQF", () => {
       });
 
       expect(res["project_2"]).toEqual({
+        contributionsCount: 7n,
         capOverflow: 0n,
         sumOfSqrt: 8000n,
         totalReceived: 10_000_000n,
@@ -148,6 +150,7 @@ describe("linearQF", () => {
       });
 
       expect(res["project_3"]).toEqual({
+        contributionsCount: 7n,
         capOverflow: 0n,
         sumOfSqrt: 14000n,
         totalReceived: 34_000_000n,
@@ -189,6 +192,7 @@ describe("linearQF", () => {
       expect(res["project_4"]).toEqual(undefined);
 
       expect(res["project_1"]).toEqual({
+        contributionsCount: 4n,
         capOverflow: 0n,
         sumOfSqrt: 7_000n,
         totalReceived: 15_000_000n,
@@ -197,6 +201,7 @@ describe("linearQF", () => {
       });
 
       expect(res["project_2"]).toEqual({
+        contributionsCount: 7n,
         capOverflow: 0n,
         sumOfSqrt: 8000n,
         totalReceived: 10_000_000n,
@@ -205,6 +210,7 @@ describe("linearQF", () => {
       });
 
       expect(res["project_3"]).toEqual({
+        contributionsCount: 7n,
         capOverflow: 0n,
         sumOfSqrt: 14000n,
         totalReceived: 34_000_000n,
@@ -222,6 +228,7 @@ describe("linearQF", () => {
       expect(Object.keys(res).length).toEqual(3);
 
       expect(res["project_1"]).toEqual({
+        contributionsCount: 4n,
         capOverflow: 0n,
         sumOfSqrt: 7000n,
         totalReceived: 15_000_000n,
@@ -230,6 +237,7 @@ describe("linearQF", () => {
       });
 
       expect(res["project_2"]).toEqual({
+        contributionsCount: 7n,
         capOverflow: 0n,
         sumOfSqrt: 8000n,
         totalReceived: 10_000_000n,
@@ -238,6 +246,7 @@ describe("linearQF", () => {
       });
 
       expect(res["project_3"]).toEqual({
+        contributionsCount: 7n,
         capOverflow: 0n,
         sumOfSqrt: 14000n,
         totalReceived: 34_000_000n,
@@ -287,6 +296,7 @@ describe("linearQF", () => {
       const res = linearQF(contributions, matchAmount, DECIMALS_PRECISION);
 
       expect(res["project_1"]).toEqual({
+        contributionsCount: 4n,
         capOverflow: 0n,
         sumOfSqrt: 8944n,
         totalReceived: 20_000_000n,
@@ -295,6 +305,7 @@ describe("linearQF", () => {
       });
 
       expect(res["project_2"]).toEqual({
+        contributionsCount: 2n,
         capOverflow: 0n,
         sumOfSqrt: 8_944n,
         totalReceived: 40_000_000n,
@@ -317,6 +328,7 @@ describe("linearQF", () => {
 
       // results taken from https://github.com/gitcoinco/grants-stack/blob/main/packages/api/docs/linearQF.md#if-match-cap-is-05
       expect(res["project_1"]).toEqual({
+        contributionsCount: 4n,
         capOverflow: -36_400_000n,
         sumOfSqrt: 7000n,
         totalReceived: 15_000_000n,
@@ -325,6 +337,7 @@ describe("linearQF", () => {
       });
 
       expect(res["project_2"]).toEqual({
+        contributionsCount: 7n,
         capOverflow: -28_400_000n,
         sumOfSqrt: 8000n,
         totalReceived: 10_000_000n,
@@ -333,7 +346,7 @@ describe("linearQF", () => {
       });
 
       expect(res["project_3"]).toEqual({
-        // we will change this test in the next PRs using BigInt and cents or token decimals
+        contributionsCount: 7n,
         capOverflow: 14_800_000n,
         sumOfSqrt: 14000n,
         totalReceived: 34_000_000n,
