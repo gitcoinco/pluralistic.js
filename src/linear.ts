@@ -50,6 +50,7 @@ export type LinearQFOptions = {
 
 export type Calculation = {
   totalReceived: bigint;
+  contributionsCount: bigint;
   sumOfSqrt: bigint;
   capOverflow: bigint;
   matchedWithoutCap: bigint;
@@ -68,6 +69,7 @@ const defaultLinearQFOptions = (): LinearQFOptions => ({
 
 const newCalculation = (totalReceived: bigint): Calculation => ({
   totalReceived,
+  contributionsCount: 0n,
   sumOfSqrt: 0n,
   capOverflow: 0n,
   matchedWithoutCap: 0n,
@@ -132,6 +134,7 @@ export const linearQF = (
         aggregated.list[recipient].totalReceived
       );
 
+      calculations[recipient].contributionsCount += 1n;
       calculations[recipient].sumOfSqrt += sqrt;
       totalRecipientSqrtSum += sqrt;
     }
@@ -149,9 +152,12 @@ export const linearQF = (
   // we calculate the final match based on
   // its sqrt and the totalSqrtSum
   for (const recipient in calculations) {
-    const val =
-      BigIntMath.pow(calculations[recipient].sumOfSqrt, 2n) -
-      calculations[recipient].totalReceived;
+    let val = 0n;
+    if (calculations[recipient].contributionsCount > 1n) {
+      val =
+        BigIntMath.pow(calculations[recipient].sumOfSqrt, 2n) -
+        calculations[recipient].totalReceived;
+    }
 
     const scalingFactor = 10n ** decimalsPrecision;
     let matchRatio = 1n * scalingFactor;
