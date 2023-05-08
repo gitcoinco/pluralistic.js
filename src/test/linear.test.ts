@@ -357,4 +357,44 @@ describe("linearQF", () => {
       testDistributedAmount(res, 100_000_000n, 1n);
     });
   });
+
+  test("calculates when projects receive only one contribution", async () => {
+    const matchAmount = 100000n;
+    const contributions = [
+      {
+        contributor: "sender_1",
+        recipient: "project_1",
+        amount: 100n,
+      },
+      {
+        contributor: "sender_2",
+        recipient: "project_2",
+        amount: 200n,
+      },
+    ];
+
+    const res = linearQF(contributions, matchAmount, DECIMALS_PRECISION, {
+      minimumAmount: 0n,
+      ignoreSaturation: true,
+      matchingCapAmount: undefined,
+    });
+
+    expect(res["project_1"]).toEqual({
+      contributionsCount: 1n,
+      capOverflow: 0n,
+      sumOfSqrt: 10n,
+      totalReceived: 100n,
+      matchedWithoutCap: 0n,
+      matched: 0n,
+    });
+
+    expect(res["project_2"]).toEqual({
+      contributionsCount: 1n,
+      capOverflow: 0n,
+      sumOfSqrt: 14n,
+      totalReceived: 200n,
+      matchedWithoutCap: 0n,
+      matched: 0n,
+    });
+  });
 });
