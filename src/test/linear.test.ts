@@ -358,7 +358,7 @@ describe("linearQF", () => {
     });
   });
 
-  test("calculates when projects receive only one contribution", async () => {
+  test("calculates when all projects receive less than one contribution", async () => {
     const matchAmount = 100000n;
     const contributions = [
       {
