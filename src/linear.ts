@@ -197,6 +197,12 @@ export const linearQF = (
     }
   }
 
+  // if everyone is over the cap, but there's no one eligible
+  // for the distribution of the overflow
+  if (totalMatchedFromUncapped === 0n) {
+    return calculations;
+  }
+
   if (options.matchingCapAmount !== undefined && totalCapOverflow > 0n) {
     // redistribute the totalCapOverflow to all
     for (const recipient in calculations) {
