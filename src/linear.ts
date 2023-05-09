@@ -204,6 +204,7 @@ export const linearQF = (
       if (recipientOverflow < 0n) {
         // recipientOverflow is negative so we can distribute something
         // to the current recipient
+        // matched : totalMatchedFromUncapped = x : totalCapOverflow
         const additionalMatch =
           (calculations[recipient].matched * totalCapOverflow) /
           totalMatchedFromUncapped;
