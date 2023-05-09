@@ -11,6 +11,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "dev": "tsc --watch",
+    "format": "prettier --write src",
+    "prettier-check": "prettier --check src",
     "postinstall": "npm run build"
   },
   "author": "",
