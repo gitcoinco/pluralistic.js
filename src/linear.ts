@@ -171,8 +171,13 @@ export const linearQF = (
       matchRatio = (aggregated.totalReceived * scalingFactor) / matchAmount;
     }
 
-    let match =
-      (((val * matchAmount) / totalSqrtSum) * matchRatio) / scalingFactor;
+    let match = 0n;
+
+    if (totalSqrtSum > 0) {
+      match =
+        (((val * matchAmount) / totalSqrtSum) * matchRatio) / scalingFactor;
+    }
+
     const matchWithoutCap = match;
     let capOverflow = 0n;
 
