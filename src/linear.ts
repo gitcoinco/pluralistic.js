@@ -210,18 +210,44 @@ export const linearQF = (
 
   if (options.matchingCapAmount !== undefined && totalCapOverflow > 0n) {
     // redistribute the totalCapOverflow to all
-    for (const recipient in calculations) {
-      const recipientOverflow = calculations[recipient].capOverflow;
-      if (recipientOverflow < 0n) {
-        // recipientOverflow is negative so we can distribute something
-        // to the current recipient
-        // matched : totalMatchedFromUncapped = x : totalCapOverflow
-        const additionalMatch =
-          (calculations[recipient].matched * totalCapOverflow) /
-          totalMatchedFromUncapped;
-        const newMatch = calculations[recipient].matched + additionalMatch;
-        calculations[recipient].matched = newMatch;
+
+    let totalLeft = totalCapOverflow;
+
+    while (totalLeft > 0n) {
+      let iterationTotalDistribution = 0n;
+
+      for (const recipient in calculations) {
+        const recipientOverflow = calculations[recipient].capOverflow;
+        if (recipientOverflow < 0n) {
+          // recipientOverflow is negative so we can distribute something
+          // to the current recipient
+          // matched : totalMatchedFromUncapped = x : totalLeft
+          const additionalMatch =
+            (calculations[recipient].matched * totalLeft) /
+            totalMatchedFromUncapped;
+
+          let newMatch = calculations[recipient].matched + additionalMatch;
+
+          if (newMatch >= options.matchingCapAmount) {
+            const distributed =
+              options.matchingCapAmount - calculations[recipient].matched;
+            iterationTotalDistribution += distributed;
+            newMatch = options.matchingCapAmount;
+            calculations[recipient].capOverflow = 0n;
+          } else {
+            iterationTotalDistribution += additionalMatch;
+            calculations[recipient].capOverflow += additionalMatch;
+          }
+
+          calculations[recipient].matched = newMatch;
+        }
       }
+
+      if (iterationTotalDistribution === 0n) {
+        break;
+      }
+
+      totalLeft -= iterationTotalDistribution;
     }
   }
 
