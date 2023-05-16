@@ -149,6 +149,7 @@ export const linearQF = (
   let totalCapOverflow = 0n;
   let totalUnderCap = 0n;
   let totalMatchedFromUncapped = 0n;
+  let totalQFMatches = 0n;
 
   // for each recipient in calculations
   // we calculate the final match based on
@@ -161,19 +162,16 @@ export const linearQF = (
         calculations[recipient].totalReceived;
     }
 
+    totalQFMatches += val;
+
     const scalingFactor = 10n ** decimalsPrecision;
     let matchRatio = 1n * scalingFactor;
-
-    if (
-      aggregated.totalReceived < matchAmount &&
-      options.ignoreSaturation === false
-    ) {
-      matchRatio = (aggregated.totalReceived * scalingFactor) / matchAmount;
-    }
 
     let match = 0n;
 
     if (totalSqrtSum > 0) {
+      // match based on the total matchAmount, we will scale down
+      // later after this loop if the round is not saturated
       match =
         (((val * matchAmount) / totalSqrtSum) * matchRatio) / scalingFactor;
     }
@@ -199,6 +197,18 @@ export const linearQF = (
 
     if (capOverflow > 0n) {
       totalCapOverflow += capOverflow;
+    }
+  }
+
+  // if the round is not saturated we scale down do the actual qfMatch
+  if (totalQFMatches < matchAmount && options.ignoreSaturation === false) {
+    for (const recipient in calculations) {
+      // const currentMatch = calculations[recipient].matched;
+      const qfMatch =
+        BigIntMath.pow(calculations[recipient].sumOfSqrt, 2n) -
+        calculations[recipient].totalReceived;
+      calculations[recipient].matched = qfMatch;
+      calculations[recipient].matchedWithoutCap = qfMatch;
     }
   }
 
