@@ -164,53 +164,56 @@ export const linearQF = (
 
     totalQFMatches += val;
 
-    const scalingFactor = 10n ** decimalsPrecision;
-    let matchRatio = 1n * scalingFactor;
-
     let match = 0n;
 
     if (totalSqrtSum > 0) {
       // match based on the total matchAmount, we will scale down
       // later after this loop if the round is not saturated
-      match =
-        (((val * matchAmount) / totalSqrtSum) * matchRatio) / scalingFactor;
+      match = (val * matchAmount) / totalSqrtSum;
     }
 
-    const matchWithoutCap = match;
-    let capOverflow = 0n;
-
-    if (options.matchingCapAmount !== undefined) {
-      // negative if lower than the cap
-      capOverflow = match - options.matchingCapAmount;
-
-      if (capOverflow > 0n) {
-        match = options.matchingCapAmount;
-      } else {
-        totalUnderCap = totalUnderCap - capOverflow;
-        totalMatchedFromUncapped += match;
-      }
-    }
-
-    calculations[recipient].matchedWithoutCap = matchWithoutCap;
+    calculations[recipient].matchedWithoutCap = match;
     calculations[recipient].matched = match;
-    calculations[recipient].capOverflow = capOverflow;
-
-    if (capOverflow > 0n) {
-      totalCapOverflow += capOverflow;
-    }
   }
 
-  // if the round is not saturated we scale down do the actual qfMatch
+  // Check if the round is saturated
+  // If the round is not saturated we scale down do the actual qfMatch
   if (totalQFMatches < matchAmount && options.ignoreSaturation === false) {
     for (const recipient in calculations) {
-      // const currentMatch = calculations[recipient].matched;
       const qfMatch =
         BigIntMath.pow(calculations[recipient].sumOfSqrt, 2n) -
         calculations[recipient].totalReceived;
+
       calculations[recipient].matched = qfMatch;
       calculations[recipient].matchedWithoutCap = qfMatch;
     }
   }
+
+  const recipientsUnderCap: Array<string> = [];
+
+  // Check cap overflows
+  if (options.matchingCapAmount !== undefined) {
+    for (const recipient in calculations) {
+      const match = calculations[recipient].matched;
+      // negative if lower than the cap
+      const capOverflow = match - options.matchingCapAmount;
+      calculations[recipient].capOverflow = capOverflow;
+
+      if (capOverflow > 0n) {
+        calculations[recipient].matched = options.matchingCapAmount;
+        totalCapOverflow += capOverflow;
+      } else {
+        totalUnderCap = totalUnderCap - capOverflow;
+        totalMatchedFromUncapped += match;
+        recipientsUnderCap.push(recipient);
+      }
+    }
+  }
+
+  // Sort recipient without cap by match descending
+  recipientsUnderCap.sort((a, b) =>
+    calculations[a].matched > calculations[b].matched ? -1 : 1
+  );
 
   // if everyone is over the cap, but there's no one eligible
   // for the distribution of the overflow
@@ -221,43 +224,26 @@ export const linearQF = (
   if (options.matchingCapAmount !== undefined && totalCapOverflow > 0n) {
     // redistribute the totalCapOverflow to all
 
-    let totalLeft = totalCapOverflow;
+    for (let i = 0; i < recipientsUnderCap.length; i++) {
+      const recipient = recipientsUnderCap[i];
 
-    while (totalLeft > 0n) {
-      let iterationTotalDistribution = 0n;
+      // recipientOverflow is negative so we can distribute something
+      // to the current recipient
+      // matched : totalMatchedFromUncapped = x : totalCapOverflow
 
-      for (const recipient in calculations) {
-        const recipientOverflow = calculations[recipient].capOverflow;
-        if (recipientOverflow < 0n) {
-          // recipientOverflow is negative so we can distribute something
-          // to the current recipient
-          // matched : totalMatchedFromUncapped = x : totalLeft
-          const additionalMatch =
-            (calculations[recipient].matched * totalLeft) /
-            totalMatchedFromUncapped;
+      const additionalMatch =
+        (calculations[recipient].matched * totalCapOverflow) /
+        totalMatchedFromUncapped;
 
-          let newMatch = calculations[recipient].matched + additionalMatch;
+      let newMatch = calculations[recipient].matched + additionalMatch;
 
-          if (newMatch >= options.matchingCapAmount) {
-            const distributed =
-              options.matchingCapAmount - calculations[recipient].matched;
-            iterationTotalDistribution += distributed;
-            newMatch = options.matchingCapAmount;
-            calculations[recipient].capOverflow = 0n;
-          } else {
-            iterationTotalDistribution += additionalMatch;
-            calculations[recipient].capOverflow += additionalMatch;
-          }
-
-          calculations[recipient].matched = newMatch;
-        }
+      if (newMatch >= options.matchingCapAmount) {
+        const distributed =
+          options.matchingCapAmount - calculations[recipient].matched;
+        newMatch = options.matchingCapAmount;
       }
 
-      if (iterationTotalDistribution === 0n) {
-        break;
-      }
-
-      totalLeft -= iterationTotalDistribution;
+      calculations[recipient].matched = newMatch;
     }
   }
 
