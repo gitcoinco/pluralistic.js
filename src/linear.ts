@@ -134,51 +134,69 @@ export const linearQF = (
         aggregated.list[recipient].totalReceived
       );
 
+      // TODO: this is contributorCount
       calculations[recipient].contributionsCount += 1n;
       calculations[recipient].sumOfSqrt += sqrt;
       totalRecipientSqrtSum += sqrt;
     }
 
     if (calculations[recipient].contributionsCount > 1) {
+      if (calculations[recipient].sumOfSqrt != totalRecipientSqrtSum) {
+        throw new Error("Sum of sqrt is not equal to total sqrt sum.");
+      }
+
       totalSqrtSum +=
-        BigIntMath.pow(totalRecipientSqrtSum, 2n) -
+        BigIntMath.pow(calculations[recipient].sumOfSqrt, 2n) -
         calculations[recipient].totalReceived;
     }
   }
 
-  let totalCapOverflow = 0n;
-  let totalUnderCap = 0n;
-  let totalMatchedFromUncapped = 0n;
+  console.log("totalSqrtSum", totalSqrtSum);
+
   let totalQFMatches = 0n;
 
   // for each recipient in calculations
   // we calculate the final match based on
   // its sqrt and the totalSqrtSum
   for (const recipient in calculations) {
-    let val = 0n;
+    let qfMatch = 0n;
     if (calculations[recipient].contributionsCount > 1n) {
-      val =
+      qfMatch =
         BigIntMath.pow(calculations[recipient].sumOfSqrt, 2n) -
         calculations[recipient].totalReceived;
     }
 
-    totalQFMatches += val;
+    totalQFMatches += qfMatch;
 
     let match = 0n;
 
     if (totalSqrtSum > 0) {
       // match based on the total matchAmount, we will scale down
       // later after this loop if the round is not saturated
-      match = (val * matchAmount) / totalSqrtSum;
+      // qfMatch : totalQFMatches =  x : matchAmount
+      match = (qfMatch * matchAmount) / totalSqrtSum;
     }
 
     calculations[recipient].matchedWithoutCap = match;
     calculations[recipient].matched = match;
   }
 
+  let totalMatched = 0n;
+  for (const id in calculations) {
+    const result = calculations[id];
+    totalMatched += result.matched;
+  }
+
+  console.log("totalMatched before cap", totalMatched);
+
   // Check if the round is saturated
   // If the round is not saturated we scale down do the actual qfMatch
-  if (totalQFMatches < matchAmount && options.ignoreSaturation === false) {
+  const scaleUp = options.ignoreSaturation === true;
+  console.log("scaleUp", scaleUp);
+
+  if (totalQFMatches < matchAmount && !scaleUp) {
+    console.log("round is not saturated, scaling down");
+
     for (const recipient in calculations) {
       const qfMatch =
         BigIntMath.pow(calculations[recipient].sumOfSqrt, 2n) -
@@ -187,64 +205,97 @@ export const linearQF = (
       calculations[recipient].matched = qfMatch;
       calculations[recipient].matchedWithoutCap = qfMatch;
     }
+
+    let totalMatched = 0n;
+    for (const id in calculations) {
+      const result = calculations[id];
+      totalMatched += result.matched;
+    }
+
+    console.log("totalMatched normalized", totalMatched);
   }
 
-  const recipientsUnderCap: Array<string> = [];
+  const scalingFactor = 10n ** 18n;
 
   // Check cap overflows
   if (options.matchingCapAmount !== undefined) {
-    for (const recipient in calculations) {
-      const match = calculations[recipient].matched;
-      // negative if lower than the cap
-      const capOverflow = match - options.matchingCapAmount;
-      calculations[recipient].capOverflow = capOverflow;
+    let totalCapOverflow;
 
-      if (capOverflow > 0n) {
-        calculations[recipient].matched = options.matchingCapAmount;
-        totalCapOverflow += capOverflow;
-      } else {
-        totalUnderCap = totalUnderCap - capOverflow;
-        totalMatchedFromUncapped += match;
-        recipientsUnderCap.push(recipient);
-      }
-    }
-  }
+    do {
+      console.log("----------------------");
 
-  // Sort recipient without cap by match descending
-  recipientsUnderCap.sort((a, b) =>
-    calculations[a].matched > calculations[b].matched ? -1 : 1
-  );
+      totalCapOverflow = 0n;
+      let totalMatchedFromUncapped = 0n;
 
-  // if everyone is over the cap, but there's no one eligible
-  // for the distribution of the overflow
-  if (totalMatchedFromUncapped === 0n) {
-    return calculations;
-  }
+      for (const recipient in calculations) {
+        const match = calculations[recipient].matched;
 
-  if (options.matchingCapAmount !== undefined && totalCapOverflow > 0n) {
-    // redistribute the totalCapOverflow to all
-
-    for (let i = 0; i < recipientsUnderCap.length; i++) {
-      const recipient = recipientsUnderCap[i];
-
-      // recipientOverflow is negative so we can distribute something
-      // to the current recipient
-      // matched : totalMatchedFromUncapped = x : totalCapOverflow
-
-      const additionalMatch =
-        (calculations[recipient].matched * totalCapOverflow) /
-        totalMatchedFromUncapped;
-
-      let newMatch = calculations[recipient].matched + additionalMatch;
-
-      if (newMatch >= options.matchingCapAmount) {
-        const distributed =
-          options.matchingCapAmount - calculations[recipient].matched;
-        newMatch = options.matchingCapAmount;
+        if (match > options.matchingCapAmount) {
+          totalCapOverflow += match - options.matchingCapAmount;
+          calculations[recipient].matched = options.matchingCapAmount;
+        } else if (match < options.matchingCapAmount) {
+          // make sure we're only counting the uncapped matches
+          totalMatchedFromUncapped += match;
+        }
       }
 
-      calculations[recipient].matched = newMatch;
-    }
+      let totalMatchedAfterCap = 0n;
+
+      for (const id in calculations) {
+        const result = calculations[id];
+        totalMatchedAfterCap += result.matched;
+      }
+
+      console.log(
+        "totalMatched after cap                  :",
+        totalMatchedAfterCap
+      );
+
+      // break the loop if there is no overflow or no uncapped matches
+      if (totalMatchedFromUncapped === 0n || totalCapOverflow === 0n) {
+        console.log("no overflow");
+        break;
+      }
+
+      console.log(
+        "totalCapOverflow                        :",
+        totalCapOverflow
+      );
+      console.log(
+        "totalMatchedFromUncapped                :",
+        totalMatchedFromUncapped
+      );
+      console.log(
+        "totalCapOverflow + totalMatchedAfterCap :",
+        totalCapOverflow + totalMatchedAfterCap
+      );
+
+      if (totalCapOverflow + totalMatchedAfterCap > matchAmount) {
+        throw new Error("too large");
+      }
+
+      let distributed = 0n;
+
+      for (const recipient in calculations) {
+        // only distribute to those who are under the cap
+        if (calculations[recipient].matched < options.matchingCapAmount) {
+          // scale up the ratio of the uncapped match to the total uncapped match
+          // because it should be between 0 and 1
+          const additionalMatchScaled =
+            (totalCapOverflow *
+              ((calculations[recipient].matched * scalingFactor) /
+                totalMatchedFromUncapped)) /
+            scalingFactor;
+
+          calculations[recipient].matched += additionalMatchScaled;
+          distributed += additionalMatchScaled;
+        }
+      }
+
+      if (distributed > totalCapOverflow) {
+        throw new Error("distributed more than totalCapOverflow");
+      }
+    } while (totalCapOverflow > 0n);
   }
 
   return calculations;
