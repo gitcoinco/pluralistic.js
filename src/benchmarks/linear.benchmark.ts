@@ -4,7 +4,7 @@ import { linearQF, Contribution } from "../index.js";
 interface RawContribution {
   voter: string;
   projectId: string;
-  amount: string;
+  amountRoundToken: string;
 }
 
 function benchmark(name: string, callback: () => void) {
@@ -40,11 +40,34 @@ benchmark(
     contributions = rawContributions.map((raw: RawContribution) => ({
       contributor: raw.voter,
       recipient: raw.projectId,
-      amount: BigInt(raw.amount),
+      amount: BigInt(raw.amountRoundToken),
     }));
   }
 );
 
 benchmark("match calculation", () => {
-  linearQF(contributions, 333_000n, 6n);
+  const matchAmount = 350000000000000000000000n;
+  const matchingCapPercentage = 4;
+
+  const matchingCapAmount =
+    (matchAmount * BigInt(Math.trunc(matchingCapPercentage * 100))) / 10000n;
+
+  const res = linearQF(contributions, matchAmount, 18n, {
+    minimumAmount: 1000000000000000000n,
+    ignoreSaturation: false,
+    matchingCapAmount,
+  });
+
+  console.log(res);
+
+  let totalDistributed = 0n;
+
+  for (const recipient in res) {
+    totalDistributed += res[recipient].matched;
+  }
+
+  console.log("totalApplications", Object.keys(res).length);
+  console.log("cap", matchingCapAmount);
+  console.log("totalDistributed", totalDistributed);
+  console.log("distributed %", (totalDistributed * 100n) / matchAmount);
 });
