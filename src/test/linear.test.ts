@@ -204,6 +204,46 @@ describe("linearQF", () => {
       testDistributedAmount(res, 250_000_000n, 0n);
     });
 
+    test("calculates the matches when round is not saturated but forcing saturation", async () => {
+      const matchAmount = 1_000_000_000n;
+      const res = linearQF(contributions, matchAmount, DECIMALS_PRECISION, {
+        minimumAmount: 0n,
+        ignoreSaturation: true,
+        matchingCapAmount: undefined,
+      });
+
+      expect(Object.keys(res).length).toEqual(3);
+
+      expect(res["project_1"]).toEqual({
+        contributionsCount: 4n,
+        capOverflow: 0n,
+        sumOfSqrt: 7_000n,
+        totalReceived: 15_000_000n,
+        matchedWithoutCap: 136_000_000n,
+        matched: 136_000_000n,
+      });
+
+      expect(res["project_2"]).toEqual({
+        contributionsCount: 7n,
+        capOverflow: 0n,
+        sumOfSqrt: 8000n,
+        totalReceived: 10_000_000n,
+        matchedWithoutCap: 216_000_000n,
+        matched: 216_000_000n,
+      });
+
+      expect(res["project_3"]).toEqual({
+        contributionsCount: 7n,
+        capOverflow: 0n,
+        sumOfSqrt: 14000n,
+        totalReceived: 34_000_000n,
+        matchedWithoutCap: 648_000_000n,
+        matched: 648_000_000n,
+      });
+
+      testDistributedAmount(res, 1_000_000_000n, 0n);
+    });
+
     test("calculates the matches skipping donations under threshold", async () => {
       const matchAmount = 100_000_000n;
       const contributionsWithLowAmounts = [
