@@ -230,7 +230,13 @@ export const linearQF = (
       for (const recipient in calculations) {
         const match = calculations[recipient].matched;
 
+        // maybe this doens't make sense if we're looping,
+        // just calculate the original cap overflow for now
+        calculations[recipient].capOverflow =
+          calculations[recipient].matchedWithoutCap - options.matchingCapAmount;
+
         if (match > options.matchingCapAmount) {
+          console.log("overflow", match - options.matchingCapAmount);
           totalCapOverflow += match - options.matchingCapAmount;
           calculations[recipient].matched = options.matchingCapAmount;
         } else if (match < options.matchingCapAmount) {
