@@ -16,6 +16,13 @@ type AggregatedContributions = {
   };
 };
 
+class LinearQFError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "LinearQFError";
+  }
+}
+
 const BigIntMath = {
   // Babylonian method
   sqrt: (n: bigint) => {
@@ -109,7 +116,7 @@ export const aggregateContributions = (
 export const linearQF = (
   rawContributions: Contribution[],
   matchAmount: bigint,
-  decimalsPrecision: bigint,
+  _decimalsPrecision: bigint, // FIXME: remove this
   options: LinearQFOptions = defaultLinearQFOptions()
 ) => {
   const aggregated: AggregatedContributions = aggregateContributions(
@@ -142,7 +149,7 @@ export const linearQF = (
 
     if (calculations[recipient].contributionsCount > 1) {
       if (calculations[recipient].sumOfSqrt != totalRecipientSqrtSum) {
-        throw new Error("Sum of sqrt is not equal to total sqrt sum.");
+        throw new LinearQFError("Sum of sqrt is not equal to total sqrt sum.");
       }
 
       totalSqrtSum +=
@@ -215,8 +222,6 @@ export const linearQF = (
     console.log("totalMatched normalized", totalMatched);
   }
 
-  const scalingFactor = 10n ** 18n;
-
   // Check cap overflows
   if (options.matchingCapAmount !== undefined) {
     let totalCapOverflow;
@@ -277,7 +282,7 @@ export const linearQF = (
       );
 
       if (totalCapOverflow + totalMatchedAfterCap > matchAmount) {
-        throw new Error("too large");
+        throw new LinearQFError("Too large");
       }
 
       let distributed = 0n;
@@ -288,10 +293,8 @@ export const linearQF = (
           // scale up the ratio of the uncapped match to the total uncapped match
           // because it should be between 0 and 1
           const additionalMatchScaled =
-            (totalCapOverflow *
-              ((calculations[recipient].matched * scalingFactor) /
-                totalMatchedFromUncapped)) /
-            scalingFactor;
+            (calculations[recipient].matched * totalCapOverflow) /
+            totalMatchedFromUncapped;
 
           calculations[recipient].matched += additionalMatchScaled;
           distributed += additionalMatchScaled;
@@ -299,7 +302,7 @@ export const linearQF = (
       }
 
       if (distributed > totalCapOverflow) {
-        throw new Error("distributed more than totalCapOverflow");
+        throw new LinearQFError("Distributed more than totalCapOverflow");
       }
     } while (totalCapOverflow > 0n);
   }
