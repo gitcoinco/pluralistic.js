@@ -85,7 +85,7 @@ const newCalculation = (totalReceived: bigint): Calculation => ({
 
 export const aggregateContributions = (
   contributions: Contribution[],
-  options: LinearQFOptions
+  _options: LinearQFOptions
 ): AggregatedContributions => {
   const ag: AggregatedContributions = {
     totalReceived: 0n,
@@ -93,10 +93,6 @@ export const aggregateContributions = (
   };
 
   for (const contribution of contributions) {
-    if (contribution.amount < options.minimumAmount) {
-      continue;
-    }
-
     ag.list[contribution.recipient] ||= {
       totalReceived: 0n,
       contributions: {},
