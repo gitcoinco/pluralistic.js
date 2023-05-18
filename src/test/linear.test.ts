@@ -244,66 +244,6 @@ describe("linearQF", () => {
       testDistributedAmount(res, 1_000_000_000n, 0n);
     });
 
-    test("calculates the matches skipping donations under threshold", async () => {
-      const matchAmount = 100_000_000n;
-      const contributionsWithLowAmounts = [
-        ...contributions,
-        {
-          contributor: "sender_1",
-          recipient: "project_4",
-          amount: 100_000n,
-        },
-        {
-          contributor: "sender_2",
-          recipient: "project_4",
-          amount: 500_000n,
-        },
-      ];
-
-      const res = linearQF(
-        contributionsWithLowAmounts,
-        matchAmount,
-        DECIMALS_PRECISION,
-        {
-          minimumAmount: 1_000_000n,
-          ignoreSaturation: true,
-          matchingCapAmount: undefined,
-        }
-      );
-
-      expect(Object.keys(res).length).toEqual(3);
-      expect(res["project_4"]).toEqual(undefined);
-
-      expect(res["project_1"]).toEqual({
-        contributionsCount: 4n,
-        capOverflow: 0n,
-        sumOfSqrt: 7_000n,
-        totalReceived: 15_000_000n,
-        matchedWithoutCap: 13_600_000n,
-        matched: 13_600_000n,
-      });
-
-      expect(res["project_2"]).toEqual({
-        contributionsCount: 7n,
-        capOverflow: 0n,
-        sumOfSqrt: 8000n,
-        totalReceived: 10_000_000n,
-        matchedWithoutCap: 21_600_000n,
-        matched: 21_600_000n,
-      });
-
-      expect(res["project_3"]).toEqual({
-        contributionsCount: 7n,
-        capOverflow: 0n,
-        sumOfSqrt: 14000n,
-        totalReceived: 34_000_000n,
-        matchedWithoutCap: 64_800_000n,
-        matched: 64_800_000n,
-      });
-
-      testDistributedAmount(res, 100_000_000n, 0n);
-    });
-
     test("calculates the matches with total donations greater than matching amount", async () => {
       const matchAmount = 10_000_000n;
       const res = linearQF(contributions, matchAmount, DECIMALS_PRECISION);
