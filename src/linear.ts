@@ -85,11 +85,6 @@ export const aggregateContributions = (
     list: {},
   };
 
-  for (const contribution of contributions) {
-    if (contribution.amount < options.minimumAmount) {
-      continue;
-    }
-
     ag.list[contribution.recipient] ||= {
       totalReceived: 0n,
       contributions: {},
