@@ -84,8 +84,7 @@ const newCalculation = (totalReceived: bigint): Calculation => ({
 });
 
 export const aggregateContributions = (
-  contributions: Contribution[],
-  _options: LinearQFOptions
+  contributions: Contribution[]
 ): AggregatedContributions => {
   const ag: AggregatedContributions = {
     totalReceived: 0n,
@@ -115,10 +114,8 @@ export const linearQF = (
   _decimalsPrecision: bigint, // FIXME: remove this
   options: LinearQFOptions = defaultLinearQFOptions()
 ) => {
-  const aggregated: AggregatedContributions = aggregateContributions(
-    rawContributions,
-    options
-  );
+  const aggregated: AggregatedContributions =
+    aggregateContributions(rawContributions);
   const calculations: RecipientsCalculations = {};
 
   let totalSqrtSum = 0n;
