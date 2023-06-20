@@ -121,11 +121,11 @@ const testDistributedAmount = (
 
 describe("linearQF", () => {
   describe("simple calculation", () => {
-    test("calculates the matches", async () => {
+    test("calculates the matches when round is saturated", async () => {
       const matchAmount = 100_000_000n;
       const res = linearQF(contributions, matchAmount, DECIMALS_PRECISION, {
         minimumAmount: 0n,
-        ignoreSaturation: true,
+        ignoreSaturation: false,
         matchingCapAmount: undefined,
       });
 
@@ -161,43 +161,25 @@ describe("linearQF", () => {
       testDistributedAmount(res, 100_000_000n, 0n);
     });
 
-    test("calculates the matches skipping donations under threshold", async () => {
-      const matchAmount = 100_000_000n;
-      const contributionsWithLowAmounts = [
-        ...contributions,
-        {
-          contributor: "sender_1",
-          recipient: "project_4",
-          amount: 100_000n,
-        },
-        {
-          contributor: "sender_2",
-          recipient: "project_4",
-          amount: 500_000n,
-        },
-      ];
-
-      const res = linearQF(
-        contributionsWithLowAmounts,
-        matchAmount,
-        DECIMALS_PRECISION,
-        {
-          minimumAmount: 1_000_000n,
-          ignoreSaturation: true,
-          matchingCapAmount: undefined,
-        }
-      );
+    test("calculates the matches when round is not saturated", async () => {
+      // 1000 instead of the previous 100.
+      // The sum of matches is 250 so it's not saturated
+      const matchAmount = 1_000_000_000n;
+      const res = linearQF(contributions, matchAmount, DECIMALS_PRECISION, {
+        minimumAmount: 0n,
+        ignoreSaturation: false,
+        matchingCapAmount: undefined,
+      });
 
       expect(Object.keys(res).length).toEqual(3);
-      expect(res["project_4"]).toEqual(undefined);
 
       expect(res["project_1"]).toEqual({
         contributionsCount: 4n,
         capOverflow: 0n,
         sumOfSqrt: 7_000n,
         totalReceived: 15_000_000n,
-        matchedWithoutCap: 13_600_000n,
-        matched: 13_600_000n,
+        matchedWithoutCap: 34_000_000n,
+        matched: 34_000_000n,
       });
 
       expect(res["project_2"]).toEqual({
@@ -205,8 +187,8 @@ describe("linearQF", () => {
         capOverflow: 0n,
         sumOfSqrt: 8000n,
         totalReceived: 10_000_000n,
-        matchedWithoutCap: 21_600_000n,
-        matched: 21_600_000n,
+        matchedWithoutCap: 54_000_000n,
+        matched: 54_000_000n,
       });
 
       expect(res["project_3"]).toEqual({
@@ -214,11 +196,52 @@ describe("linearQF", () => {
         capOverflow: 0n,
         sumOfSqrt: 14000n,
         totalReceived: 34_000_000n,
-        matchedWithoutCap: 64_800_000n,
-        matched: 64_800_000n,
+        matchedWithoutCap: 162_000_000n,
+        matched: 162_000_000n,
       });
 
-      testDistributedAmount(res, 100_000_000n, 0n);
+      // since it's not saturated we distribute 250 instead of 1000
+      testDistributedAmount(res, 250_000_000n, 0n);
+    });
+
+    test("calculates the matches when round is not saturated but forcing saturation", async () => {
+      const matchAmount = 1_000_000_000n;
+      const res = linearQF(contributions, matchAmount, DECIMALS_PRECISION, {
+        minimumAmount: 0n,
+        ignoreSaturation: true,
+        matchingCapAmount: undefined,
+      });
+
+      expect(Object.keys(res).length).toEqual(3);
+
+      expect(res["project_1"]).toEqual({
+        contributionsCount: 4n,
+        capOverflow: 0n,
+        sumOfSqrt: 7_000n,
+        totalReceived: 15_000_000n,
+        matchedWithoutCap: 136_000_000n,
+        matched: 136_000_000n,
+      });
+
+      expect(res["project_2"]).toEqual({
+        contributionsCount: 7n,
+        capOverflow: 0n,
+        sumOfSqrt: 8000n,
+        totalReceived: 10_000_000n,
+        matchedWithoutCap: 216_000_000n,
+        matched: 216_000_000n,
+      });
+
+      expect(res["project_3"]).toEqual({
+        contributionsCount: 7n,
+        capOverflow: 0n,
+        sumOfSqrt: 14000n,
+        totalReceived: 34_000_000n,
+        matchedWithoutCap: 648_000_000n,
+        matched: 648_000_000n,
+      });
+
+      testDistributedAmount(res, 1_000_000_000n, 0n);
     });
 
     test("calculates the matches with total donations greater than matching amount", async () => {
@@ -255,65 +278,6 @@ describe("linearQF", () => {
       });
 
       testDistributedAmount(res, 10_000_000n, 0n);
-    });
-
-    test("calculates the matches with total donations less than matching amount", async () => {
-      const matchAmount = 100_000_000n;
-      const contributions = [
-        {
-          contributor: "sender_1",
-          recipient: "project_1",
-          amount: 5_000_000n,
-        },
-        {
-          contributor: "sender_2",
-          recipient: "project_1",
-          amount: 5_000_000n,
-        },
-        {
-          contributor: "sender_3",
-          recipient: "project_1",
-          amount: 5_000_000n,
-        },
-        {
-          contributor: "sender_4",
-          recipient: "project_1",
-          amount: 5_000_000n,
-        },
-
-        {
-          contributor: "sender_3",
-          recipient: "project_2",
-          amount: 20_000_000n,
-        },
-        {
-          contributor: "sender_4",
-          recipient: "project_2",
-          amount: 20_000_000n,
-        },
-      ];
-
-      const res = linearQF(contributions, matchAmount, DECIMALS_PRECISION);
-
-      expect(res["project_1"]).toEqual({
-        contributionsCount: 4n,
-        capOverflow: 0n,
-        sumOfSqrt: 8944n,
-        totalReceived: 20_000_000n,
-        matchedWithoutCap: 36_000_583n,
-        matched: 36_000_583n,
-      });
-
-      expect(res["project_2"]).toEqual({
-        contributionsCount: 2n,
-        capOverflow: 0n,
-        sumOfSqrt: 8_944n,
-        totalReceived: 40_000_000n,
-        matchedWithoutCap: 23_999_416n,
-        matched: 23_999_416n,
-      });
-
-      testDistributedAmount(res, 60_000_000n, 1n);
     });
 
     test("calculates the matches with matching cap", async () => {

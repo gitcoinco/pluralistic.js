@@ -4,7 +4,7 @@ import { linearQF, Contribution } from "../index.js";
 interface RawContribution {
   voter: string;
   projectId: string;
-  amount: string;
+  amountRoundToken: string;
 }
 
 function benchmark(name: string, callback: () => void) {
@@ -40,11 +40,45 @@ benchmark(
     contributions = rawContributions.map((raw: RawContribution) => ({
       contributor: raw.voter,
       recipient: raw.projectId,
-      amount: BigInt(raw.amount),
+      amount: BigInt(raw.amountRoundToken),
     }));
   }
 );
 
 benchmark("match calculation", () => {
-  linearQF(contributions, 333_000n, 6n);
+  const options = {
+    minimumAmount: 1000000000000000000n,
+    matchingCapAmount: 14000000000000000000000n,
+    ignoreSaturation: false,
+  };
+
+  const matchAmount = 350000000000000000000000n;
+
+  console.log("matchAmount ", matchAmount);
+  console.log(options);
+
+  const results = linearQF(contributions, matchAmount, 18n, options);
+
+  let totalMatched = 0n;
+
+  for (const id in results) {
+    const result = results[id];
+    totalMatched += result.matched;
+
+    if (result.matched > options.matchingCapAmount) {
+      console.error(
+        "matched amount exceeds matching cap",
+        result.matched,
+        options.matchingCapAmount
+      );
+    }
+  }
+
+  const roundSaturation =
+    Number(((totalMatched * BigInt(10_000)) / matchAmount) * BigInt(10_000)) /
+    1_000_000;
+
+  console.log("totalMatched", totalMatched);
+  console.log("difference  ", matchAmount - totalMatched);
+  console.log("saturation  ", roundSaturation, "%");
 });
