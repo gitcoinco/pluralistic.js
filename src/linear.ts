@@ -151,7 +151,7 @@ export const linearQF = (
     }
   }
 
-  console.log("totalSqrtSum", totalSqrtSum);
+  // console.log("totalSqrtSum", totalSqrtSum);
 
   let totalQFMatches = 0n;
 
@@ -187,15 +187,15 @@ export const linearQF = (
     totalMatched += result.matched;
   }
 
-  console.log("totalMatched before cap", totalMatched);
+  // console.log("totalMatched before cap", totalMatched);
 
   // Check if the round is saturated
   // If the round is not saturated we scale down do the actual qfMatch
   const scaleUp = options.ignoreSaturation === true;
-  console.log("scaleUp", scaleUp);
+  // console.log("scaleUp", scaleUp);
 
   if (totalQFMatches < matchAmount && !scaleUp) {
-    console.log("round is not saturated, scaling down");
+    // console.log("round is not saturated, scaling down");
 
     for (const recipient in calculations) {
       const qfMatch =
@@ -212,7 +212,7 @@ export const linearQF = (
       totalMatched += result.matched;
     }
 
-    console.log("totalMatched normalized", totalMatched);
+    // console.log("totalMatched normalized", totalMatched);
   }
 
   // Check cap overflows
@@ -220,7 +220,7 @@ export const linearQF = (
     let totalCapOverflow;
 
     do {
-      console.log("----------------------");
+      // console.log("----------------------");
 
       totalCapOverflow = 0n;
       let totalMatchedFromUncapped = 0n;
@@ -234,7 +234,7 @@ export const linearQF = (
           calculations[recipient].matchedWithoutCap - options.matchingCapAmount;
 
         if (match > options.matchingCapAmount) {
-          console.log("overflow", match - options.matchingCapAmount);
+          // console.log("overflow", match - options.matchingCapAmount);
           totalCapOverflow += match - options.matchingCapAmount;
           calculations[recipient].matched = options.matchingCapAmount;
         } else if (match < options.matchingCapAmount) {
@@ -250,29 +250,29 @@ export const linearQF = (
         totalMatchedAfterCap += result.matched;
       }
 
-      console.log(
-        "totalMatched after cap                  :",
-        totalMatchedAfterCap
-      );
+      // console.log(
+      //   "totalMatched after cap                  :",
+      //   totalMatchedAfterCap
+      // );
 
       // break the loop if there is no overflow or no uncapped matches
       if (totalMatchedFromUncapped === 0n || totalCapOverflow === 0n) {
-        console.log("no overflow");
+        // console.log("no overflow");
         break;
       }
 
-      console.log(
-        "totalCapOverflow                        :",
-        totalCapOverflow
-      );
-      console.log(
-        "totalMatchedFromUncapped                :",
-        totalMatchedFromUncapped
-      );
-      console.log(
-        "totalCapOverflow + totalMatchedAfterCap :",
-        totalCapOverflow + totalMatchedAfterCap
-      );
+      // console.log(
+      //   "totalCapOverflow                        :",
+      //   totalCapOverflow
+      // );
+      // console.log(
+      //   "totalMatchedFromUncapped                :",
+      //   totalMatchedFromUncapped
+      // );
+      // console.log(
+      //   "totalCapOverflow + totalMatchedAfterCap :",
+      //   totalCapOverflow + totalMatchedAfterCap
+      // );
 
       if (totalCapOverflow + totalMatchedAfterCap > matchAmount) {
         throw new LinearQFError("Too large");
