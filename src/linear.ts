@@ -46,6 +46,28 @@ const BigIntMath = {
     return x;
   },
 
+  sqrtWithRemainder: (n: bigint) => {
+    if (n < 0n) {
+      throw new Error("Square root of negative numbers is not supported.");
+    }
+
+    if (n === 0n || n === 1n) {
+      return { sqrt: n, remainder: 0n };
+    }
+
+    let x = n >> 1n;
+    let y = (x + 1n) >> 1n;
+
+    while (y < x) {
+      x = y;
+      y = (x + n / x) >> 1n;
+    }
+
+    const remainder = n - x * x;
+
+    return { sqrt: x, remainder };
+  },
+
   pow: (x: bigint, y: bigint) => x ** y,
 };
 
@@ -59,6 +81,7 @@ export type Calculation = {
   totalReceived: bigint;
   contributionsCount: bigint;
   sumOfSqrt: bigint;
+  sumOfSqrtRemainder: bigint;
   capOverflow: bigint;
   matchedWithoutCap: bigint;
   matched: bigint;
@@ -78,6 +101,7 @@ const newCalculation = (totalReceived: bigint): Calculation => ({
   totalReceived,
   contributionsCount: 0n,
   sumOfSqrt: 0n,
+  sumOfSqrtRemainder: 0n,
   capOverflow: 0n,
   matchedWithoutCap: 0n,
   matched: 0n,
@@ -128,7 +152,7 @@ export const linearQF = (
     // for each recipient contribution aggregated by contributor
     for (const contributor in aggregated.list[recipient].contributions) {
       const amount = aggregated.list[recipient].contributions[contributor];
-      const sqrt = BigIntMath.sqrt(amount);
+      const { sqrt, remainder } = BigIntMath.sqrtWithRemainder(amount);
 
       calculations[recipient] ||= newCalculation(
         aggregated.list[recipient].totalReceived
@@ -137,6 +161,7 @@ export const linearQF = (
       // TODO: this is contributorCount
       calculations[recipient].contributionsCount += 1n;
       calculations[recipient].sumOfSqrt += sqrt;
+      calculations[recipient].sumOfSqrtRemainder += remainder;
       totalRecipientSqrtSum += sqrt;
     }
 
@@ -146,7 +171,8 @@ export const linearQF = (
       }
 
       totalSqrtSum +=
-        BigIntMath.pow(calculations[recipient].sumOfSqrt, 2n) -
+        BigIntMath.pow(calculations[recipient].sumOfSqrt, 2n) +
+        calculations[recipient].sumOfSqrtRemainder -
         calculations[recipient].totalReceived;
     }
   }
@@ -164,8 +190,13 @@ export const linearQF = (
     // might become negative if the sqrt of the donations loses precision
     if (calculations[recipient].contributionsCount > 1n) {
       qfMatch =
-        BigIntMath.pow(calculations[recipient].sumOfSqrt, 2n) -
+        BigIntMath.pow(calculations[recipient].sumOfSqrt, 2n) +
+        calculations[recipient].sumOfSqrtRemainder -
         calculations[recipient].totalReceived;
+
+      if (qfMatch < 0n) {
+        throw new LinearQFError("QF match is negative.");
+      }
     }
 
     totalQFMatches += qfMatch;
@@ -205,8 +236,13 @@ export const linearQF = (
       // might become negative if the sqrt of the donations loses precision
       if (calculations[recipient].contributionsCount > 1n) {
         qfMatch =
-          BigIntMath.pow(calculations[recipient].sumOfSqrt, 2n) -
+          BigIntMath.pow(calculations[recipient].sumOfSqrt, 2n) +
+          calculations[recipient].sumOfSqrtRemainder -
           calculations[recipient].totalReceived;
+
+        if (qfMatch < 0n) {
+          throw new LinearQFError("QF match is negative.");
+        }
       }
 
       calculations[recipient].matched = qfMatch;
