@@ -160,6 +160,8 @@ export const linearQF = (
   // its sqrt and the totalSqrtSum
   for (const recipient in calculations) {
     let qfMatch = 0n;
+    // if we have only one recipient, subtracting the totalReceived
+    // might become negative if the sqrt of the donations loses precision
     if (calculations[recipient].contributionsCount > 1n) {
       qfMatch =
         BigIntMath.pow(calculations[recipient].sumOfSqrt, 2n) -
@@ -198,9 +200,14 @@ export const linearQF = (
     // console.log("round is not saturated, scaling down");
 
     for (const recipient in calculations) {
-      const qfMatch =
-        BigIntMath.pow(calculations[recipient].sumOfSqrt, 2n) -
-        calculations[recipient].totalReceived;
+      let qfMatch = 0n;
+      // if we have only one recipient, subtracting the totalReceived
+      // might become negative if the sqrt of the donations loses precision
+      if (calculations[recipient].contributionsCount > 1n) {
+        qfMatch =
+          BigIntMath.pow(calculations[recipient].sumOfSqrt, 2n) -
+          calculations[recipient].totalReceived;
+      }
 
       calculations[recipient].matched = qfMatch;
       calculations[recipient].matchedWithoutCap = qfMatch;
