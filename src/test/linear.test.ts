@@ -361,4 +361,34 @@ describe("linearQF", () => {
       matched: 0n,
     });
   });
+
+  test("it doesn't fail when a project has only one contributions and we don't scale up", async () => {
+    const matchAmount = 100000n;
+    const contributions = [
+      {
+        contributor: "sender_1",
+        recipient: "project_1",
+        // square root of 99 for bigints is 9 instead of 9.9498743710662
+        // so it will fail when we substract the total received from the
+        // square of the sum of the square roots
+        amount: 99n,
+      },
+    ];
+
+    const res = linearQF(contributions, matchAmount, DECIMALS_PRECISION, {
+      minimumAmount: 0n,
+      // we don't scale up (we don't distribute all the funds if we don't match at least the full pool amount)
+      ignoreSaturation: false,
+      matchingCapAmount: undefined,
+    });
+
+    expect(res["project_1"]).toEqual({
+      contributionsCount: 1n,
+      capOverflow: 0n,
+      sumOfSqrt: 9n,
+      totalReceived: 99n,
+      matchedWithoutCap: 0n,
+      matched: 0n,
+    });
+  });
 });
