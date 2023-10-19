@@ -31,27 +31,6 @@ const BigIntMath = {
     }
 
     if (n === 0n || n === 1n) {
-      return n;
-    }
-
-    // better initial guess with n / 2
-    let x = n >> 1n;
-    let y = (x + 1n) >> 1n;
-
-    while (y < x) {
-      x = y;
-      y = (x + n / x) >> 1n;
-    }
-
-    return x;
-  },
-
-  sqrtWithRemainder: (n: bigint) => {
-    if (n < 0n) {
-      throw new Error("Square root of negative numbers is not supported.");
-    }
-
-    if (n === 0n || n === 1n) {
       return { sqrt: n, remainder: 0n };
     }
 
@@ -152,7 +131,7 @@ export const linearQF = (
     // for each recipient contribution aggregated by contributor
     for (const contributor in aggregated.list[recipient].contributions) {
       const amount = aggregated.list[recipient].contributions[contributor];
-      const { sqrt, remainder } = BigIntMath.sqrtWithRemainder(amount);
+      const { sqrt, remainder } = BigIntMath.sqrt(amount);
 
       calculations[recipient] ||= newCalculation(
         aggregated.list[recipient].totalReceived
