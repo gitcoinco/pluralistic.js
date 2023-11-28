@@ -114,11 +114,26 @@ export const aggregateContributions = (
 export const linearQF = (
   rawContributions: Contribution[],
   matchAmount: bigint,
-  _decimalsPrecision: bigint, // FIXME: remove this
+  decimalsPrecision: bigint, // FIXME: remove this
   options: LinearQFOptions = defaultLinearQFOptions()
 ) => {
   const aggregated: AggregatedContributions =
     aggregateContributions(rawContributions);
+
+  return linearQFWithAggregates(
+    aggregated,
+    matchAmount,
+    decimalsPrecision,
+    options
+  );
+};
+
+export const linearQFWithAggregates = (
+  aggregated: AggregatedContributions,
+  matchAmount: bigint,
+  _decimalsPrecision: bigint, // FIXME: remove this
+  options: LinearQFOptions = defaultLinearQFOptions()
+) => {
   const calculations: RecipientsCalculations = {};
 
   let totalSqrtSum = 0n;
