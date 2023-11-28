@@ -132,7 +132,7 @@ export const linearQFWithAggregates = (
   aggregated: AggregatedContributions,
   matchAmount: bigint,
   _decimalsPrecision: bigint, // FIXME: remove this
-  options: LinearQFOptions = defaultLinearQFOptions()
+  options: LinearQFOptions
 ) => {
   const calculations: RecipientsCalculations = {};
 
