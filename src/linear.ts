@@ -9,7 +9,7 @@ type AggregatedContribution = {
   contributions: { [contributor: string]: bigint };
 };
 
-type AggregatedContributions = {
+export type AggregatedContributions = {
   totalReceived: bigint;
   list: {
     [recipient: string]: AggregatedContribution;
